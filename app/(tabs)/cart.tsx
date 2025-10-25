@@ -1,23 +1,119 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { auth, db } from '../../firebase.config';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { ShoppingItem } from '../../types';
 
 export default function CartScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [itemName, setItemName] = useState('');
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const addItem = () => {
-    if (!itemName.trim()) return;
-    setShoppingList(prev => [...prev, { id: Date.now().toString(), name: itemName.trim(), addedBy: 'manual' }]);
-    setItemName('');
-    setModalVisible(false);
+  useEffect(() => {
+    loadHouseholdAndItems();
+  }, []);
+
+  const loadHouseholdAndItems = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // Get user's household ID
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+      
+      if (!userData?.householdId) {
+        setLoading(false);
+        return;
+      }
+
+      setHouseholdId(userData.householdId);
+
+      const itemsQuery = query(
+        collection(db, 'shoppingItems'),
+        where('householdId', '==', userData.householdId)
+      );
+
+      const unsubscribe = onSnapshot(itemsQuery, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as ShoppingItem[];
+        setShoppingList(items);
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error loading items:', error);
+      setLoading(false);
+    }
   };
 
-  const removeItem = (id: string) => setShoppingList(prev => prev.filter(i => i.id !== id));
+  const addItem = async () => {
+    if (!itemName.trim() || !householdId) return;
+
+    try {
+      await addDoc(collection(db, 'shoppingItems'), {
+        name: itemName.trim(),
+        addedBy: 'manual',
+        householdId: householdId,
+        createdAt: new Date(),
+      });
+
+      setItemName('');
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Error adding item:', error);
+    }
+  };
+
+  const removeItem = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'shoppingItems', id));
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4059ffff" />
+      </View>
+    );
+  }
+
+  if (!householdId) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" backgroundColor="#4059ffff" />
+        <LinearGradient colors={["#4059ffff", "#5b31beff"]} style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.title}>Shopping List</Text>
+              <Text style={styles.subtitle}>Join a household first</Text>
+            </View>
+          </View>
+        </LinearGradient>
+        <View style={styles.card}>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="home-outline" size={64} color="#8F9BB3" />
+            </View>
+            <Text style={styles.emptyText}>No Household</Text>
+            <Text style={styles.emptySubtext}>
+              Join or create a household to share a shopping list with your roommates
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -153,8 +249,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F4F6FA',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F4F6FA',
+  },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 80 : 40,
     paddingBottom: 40,
     paddingHorizontal: 24,
   },
@@ -164,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 35,
+    fontSize: 28,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.5,

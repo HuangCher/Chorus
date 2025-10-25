@@ -342,12 +342,6 @@ export default function HouseholdScreen() {
             <Text style={styles.greeting}>Household Stats</Text>
             <Text style={styles.subtitle}>Code: {household.code}</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => openModal('join')}
-          >
-            <Ionicons name="person-add" size={24} color="#fff" />
-          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -438,7 +432,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F6FA',
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 80 : 40,
     paddingBottom: 40,
     paddingHorizontal: 24,
   },

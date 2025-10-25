@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F6FA',
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 80 : 40,
     paddingBottom: 40,
     paddingHorizontal: 24,
   },

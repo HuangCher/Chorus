@@ -29,4 +29,5 @@ export interface ShoppingItem {
   id: string;
   name: string;
   addedBy: 'sensor' | 'manual';
+  householdId: string;
 }

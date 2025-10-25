@@ -7,14 +7,9 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: '#13508b',
         tabBarInactiveTintColor: '#8E8E93',
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#ffffffff',
-        },
-        headerTintColor: '#ffffffff',
+        headerShown: false,
       }}
     >
-
       <Tabs.Screen
         name="household"
         options={{
@@ -44,7 +39,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
     </Tabs>
   );
 }
