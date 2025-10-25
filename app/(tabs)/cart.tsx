@@ -2,44 +2,50 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { ShoppingItem } from '../../types';
 
 export default function CartScreen() {
-const [modalVisible, setModalVisible] = useState(false);
-const [itemName, setItemName] = useState('');
-const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [itemName, setItemName] = useState('');
+  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
 
-const addItem = () => {
-if (!itemName.trim()) return;
-setShoppingList(prev => [...prev, { id: Date.now().toString(), name: itemName.trim(), addedBy: 'manual' }]);
-setItemName('');
-setModalVisible(false);
-};
+  const addItem = () => {
+    if (!itemName.trim()) return;
+    setShoppingList(prev => [...prev, { id: Date.now().toString(), name: itemName.trim(), addedBy: 'manual' }]);
+    setItemName('');
+    setModalVisible(false);
+  };
 
-const removeItem = (id: string) => setShoppingList(prev => prev.filter(i => i.id !== id));
+  const removeItem = (id: string) => setShoppingList(prev => prev.filter(i => i.id !== id));
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={styles.container}>
-        <View style={styles.header}>
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#4059ffff" />
+      
+      {/* Header with Gradient */}
+      <LinearGradient colors={["#4059ffff", "#5b31beff"]} style={styles.header}>
+        <View style={styles.headerContent}>
           <View>
             <Text style={styles.title}>Shopping List</Text>
             <Text style={styles.subtitle}>{shoppingList.length} items</Text>
           </View>
-          <LinearGradient colors={["#0A2BFF", "#6B2BFF"]} style={styles.gradBtn}>
-            <TouchableOpacity onPress={() => setModalVisible(true)} style={{width:'100%',height:'100%',justifyContent:'center',alignItems:'center'}}>
-              <Text style={styles.gradBtnText}>+</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
+            <Ionicons name="add" size={28} color="#fff" />
+          </TouchableOpacity>
         </View>
+      </LinearGradient>
 
+      {/* Content Card */}
+      <View style={styles.card}>
         {shoppingList.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🛒</Text>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="cart-outline" size={64} color="#8F9BB3" />
+            </View>
             <Text style={styles.emptyText}>Your list is empty</Text>
             <Text style={styles.emptySubtext}>
-              Items will appear here when sensors detect{'\n'}low inventory or you add them manually
+              Items will appear here when sensors detect low inventory or you add them manually
             </Text>
           </View>
         ) : (
@@ -51,11 +57,18 @@ const removeItem = (id: string) => setShoppingList(prev => prev.filter(i => i.id
             renderItem={({ item }) => (
               <View style={styles.itemCard}>
                 <View style={styles.itemLeft}>
+                  <View style={styles.iconCircle}>
+                    <Ionicons 
+                      name={item.addedBy === 'sensor' ? 'hardware-chip-outline' : 'hand-left-outline'} 
+                      size={20} 
+                      color="#4059ffff" 
+                    />
+                  </View>
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>
-                        {item.addedBy === 'sensor' ? '🤖 Auto-added' : '✋ Manual'}
+                        {item.addedBy === 'sensor' ? 'Auto-added' : 'Manual'}
                       </Text>
                     </View>
                   </View>
@@ -64,97 +77,101 @@ const removeItem = (id: string) => setShoppingList(prev => prev.filter(i => i.id
                   style={styles.removeButton}
                   onPress={() => removeItem(item.id)}
                 >
-                  <Text style={styles.removeButtonText}>✓</Text>
+                  <Ionicons name="checkmark" size={20} color="#fff" />
                 </TouchableOpacity>
               </View>
             )}
           />
         )}
+      </View>
 
-        {/* Bottom Sheet Modal */}
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-          statusBarTranslucent
-        >
+      {/* Bottom Sheet Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+        statusBarTranslucent
+      >
+        <View style={styles.modalBackdrop}>
           <TouchableOpacity 
-            style={styles.modalBackdrop}
+            style={StyleSheet.absoluteFill}
             activeOpacity={1}
             onPress={() => setModalVisible(false)}
           />
-          <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.modalOverlay}
-          >
-            <View style={styles.modalContent}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Add Item</Text>
+        </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContent, { transform: [{ translateY: modalVisible ? 0 : 1000 }] }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Add Item</Text>
+            
+            <View style={styles.inputWrapper}>
+              <Ionicons name="basket-outline" size={20} color="#8F9BB3" style={{ marginRight: 8 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Item name"
-                placeholderTextColor="#999"
+                placeholderTextColor="#8F9BB3"
                 value={itemName}
                 onChangeText={setItemName}
                 autoFocus
                 onSubmitEditing={addItem}
               />
-              <View style={styles.modalButtons}>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setModalVisible(false);
+                  setItemName('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <LinearGradient colors={["#4059ffff", "#5b31beff"]} style={[styles.modalButton, styles.confirmButton]}>
                 <TouchableOpacity 
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => {
-                    setModalVisible(false);
-                    setItemName('');
-                  }}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.confirmButton]}
                   onPress={addItem}
+                  style={{ width: '100%', alignItems: 'center' }}
                 >
                   <Text style={styles.confirmButtonText}>Add Item</Text>
                 </TouchableOpacity>
-              </View>
+              </LinearGradient>
             </View>
-          </KeyboardAvoidingView>
-        </Modal>
-      </View>
-    </SafeAreaView>
-
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F4F6FA',
   },
   header: {
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: -20,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   title: {
-    fontSize: 32,
+    fontSize: 35,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#fff',
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#666',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
     fontWeight: '500',
   },
@@ -162,98 +179,100 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#13508b',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#13508b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  addButtonText: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: '300',
+  card: {
+    flex: 1,
+    marginTop: -20,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: 24,
+    elevation: 6,
   },
   listContainer: {
     padding: 20,
     paddingBottom: 40,
   },
   itemCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: '#f3f3f3ff',
+    borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   itemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   itemInfo: {
     flex: 1,
   },
   itemName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: '#111',
     marginBottom: 6,
-    letterSpacing: -0.3,
   },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E4E9F2',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
   },
   badgeText: {
     fontSize: 12,
-    color: '#666',
+    color: '#6B7083',
     fontWeight: '600',
   },
   removeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#34C759',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  removeButtonText: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: '700',
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+    paddingBottom: 100,
   },
-  emptyIcon: {
-    fontSize: 72,
-    marginBottom: 16,
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f3f3f3ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   emptyText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#111',
     marginBottom: 8,
-    letterSpacing: -0.5,
   },
   emptySubtext: {
     fontSize: 15,
-    color: '#999',
+    color: '#8F9BB3',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -271,15 +290,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 30,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
     elevation: 8,
   },
   modalHandle: {
@@ -288,65 +303,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: '#111',
     marginBottom: 20,
-    letterSpacing: -0.5,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3f3f3ff',
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    height: 55,
+    marginBottom: 20,
   },
   input: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 17,
-    color: '#1a1a1a',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    flex: 1,
+    fontSize: 16,
+    color: '#111',
   },
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 20,
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
+    height: 55,
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f3f3f3ff',
   },
   cancelButtonText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#666',
+    color: '#6B7083',
   },
   confirmButton: {
-    backgroundColor: '#13508b',
-    shadowColor: '#13508b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    overflow: 'hidden',
   },
   confirmButtonText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#fff',
-  },
-  gradBtn:{
-    width:44,
-    height:44,
-    borderRadius:22,
-    overflow:'hidden'
-  },
-  gradBtnText:{
-    color:'#fff',
-    fontSize:26,
-    fontWeight:'300'
   },
 });

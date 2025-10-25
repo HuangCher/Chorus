@@ -10,7 +10,7 @@ export interface User {
 export interface Chore {
   id: string;
   householdId: string;
-  type: 'dishes' | 'trash' | 'vacuum' | 'laundry' | 'cleanup';
+  type: 'dishes' | 'trash' | 'vacuum' | 'laundry' | 'cleanup' | 'grocery';
   assignedTo: string;
   status: 'pending' | 'completed' | 'overdue';
   dueBy: Date;

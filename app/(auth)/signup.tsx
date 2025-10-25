@@ -105,7 +105,10 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F4F6FA" },
+  root: { 
+    flex: 1, 
+    backgroundColor: "#F4F6FA" 
+  },
   logo: {
     position: "absolute",
     top: 60,
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   headerTitle: {
-    fontSize: 35,
+    fontSize: 30,
     paddingBottom: 8,
     color: "#fff",
     fontWeight: "700",
@@ -127,12 +130,12 @@ const styles = StyleSheet.create({
   },
   headerSub: {
     color: "rgba(255,255,255,0.8)",
-    marginBottom: 30,
+    marginBottom: 50,
     fontSize: 18,
     textAlign: "center"
   },
   card: {
-    marginTop: -90,
+    marginTop: -150,
     padding: 30,
     paddingTop: 40,
     backgroundColor: "#fff",
